@@ -15,7 +15,7 @@
   <div class="wrap">
     <header>
       <h1><span class="brand-dot"></span>부동산 PF·실물 인수 딜 대시보드</h1>
-      <p>공개된 기사·공시를 통해 확인 가능한 서울 지역 부동산 PF 딜과 실물 인수 딜을 2026년 이후 발생 건 기준으로 정리했습니다. 확인되지 않은 정보는 "미확인"으로 표시했습니다.</p>
+      <p>공개된 기사·공시를 통해 확인 가능한 서울·경기·인천 지역 부동산 PF 딜과 실물 인수 딜을 2026년 이후 발생 건 기준으로 정리했습니다. 확인되지 않은 정보는 "미확인"으로 표시했습니다.</p>
     </header>
 
     <section class="card">
@@ -40,7 +40,7 @@
           <label class="gtitle">딜규모(억원)</label>
           <div class="range-inputs">
             <input type="number" id="minAmount" min="0" step="10" value="0"> ~
-            <input type="number" id="maxAmount" min="0" step="10" value="9000">
+            <input type="number" id="maxAmount" min="0" step="10" value="13000">
           </div>
         </div>
         <div class="filter-group">
@@ -55,9 +55,15 @@
     </section>
 
     <section class="card">
-      <h2>지역 (서울 자치구)</h2>
+      <h2>지역 (서울·경기·인천)</h2>
+      <div class="map-tabs">
+        <button class="tab-btn active" id="tabSeoul" type="button" data-province="seoul">서울</button>
+        <button class="tab-btn" id="tabGyeonggi" type="button" data-province="gyeonggi">경기</button>
+        <button class="tab-btn" id="tabIncheon" type="button" data-province="incheon">인천</button>
+      </div>
       <div class="map-layout">
         <div class="map-wrap">
+        <div class="map-pane active" id="paneSeoul">
           <svg id="seoulMap" viewBox="0 0 1400 1400" xmlns="http://www.w3.org/2000/svg">
             <g id="guPaths">
               <path class="gu-path" data-gu="도봉구" d="M964.064,164.667
@@ -404,13 +410,26 @@ c-5.487-5.35-10.367-11.305-15.503-17.004c25.86-24.984,53.596-48.095,62.514-90.02
 c2.834,0,5.668,0,8.502,0c2.344-0.324,5.988,0.654,7.502-0.5c3.334,0,6.668,0,10.002,0
 C730.596,766.053,735.563,764.919,737.012,767.305z"/>
             </g>
-            <g id="guLabels"></g>
+            <g class="map-labels"></g>
           </svg>
+        </div>
+        <div class="map-pane" id="paneGyeonggi">
+          <svg id="gyeonggiMap" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+            <g id="gyeonggiPaths"></g>
+            <g class="map-labels"></g>
+          </svg>
+        </div>
+        <div class="map-pane" id="paneIncheon">
+          <svg id="incheonMap" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+            <g id="incheonPaths"></g>
+            <g class="map-labels"></g>
+          </svg>
+        </div>
         </div>
         <div class="map-side">
           <div id="regionStatus" class="map-status">전체 자치구 표시 중</div>
           <button class="btn-reset" id="mapResetBtn" type="button">전체 보기</button>
-          <div class="map-note">지도: Wikimedia Commons "Seoul districts.svg" (CC BY-SA 3.0)</div>
+          <div class="map-note">지도 출처: 서울 - Wikimedia Commons "Seoul districts.svg"(CC BY-SA 3.0) · 경기·인천 - KOSTAT 센서스용 행정구역경계(2013, "Free to share or remix") via southkorea/southkorea-maps. 인천 중구·동구는 2026-07-01 행정구역 개편으로 제물포구·영종구로 통합됐으나, 지도 경계는 개편 이전 자료 기준입니다.</div>
         </div>
       </div>
     </section>
@@ -436,11 +455,15 @@ C730.596,766.053,735.563,764.919,737.012,767.305z"/>
     <section class="card">
       <div class="list-head-row">
         <h2 style="margin:0;">딜 리스트</h2>
-        <span id="listCount" style="font-size:12.5px;color:var(--text-muted);"></span>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="btn-reset" id="watchOnlyBtn" type="button">⭐ 관심 딜만</button>
+          <span id="listCount" style="font-size:12.5px;color:var(--text-muted);"></span>
+        </div>
       </div>
       <table>
         <thead>
           <tr>
+            <th class="watch-col"></th>
             <th style="width:78px;">유형</th>
             <th>딜명</th>
             <th>자산유형</th>
@@ -452,7 +475,7 @@ C730.596,766.053,735.563,764.919,737.012,767.305z"/>
           </tr>
         </thead>
         <tbody id="listBody">
-          <tr class="empty-row"><td colspan="8">데이터가 없습니다.</td></tr>
+          <tr class="empty-row"><td colspan="9">데이터가 없습니다.</td></tr>
         </tbody>
       </table>
     </section>
@@ -465,6 +488,7 @@ C730.596,766.053,735.563,764.919,737.012,767.305z"/>
   </aside>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

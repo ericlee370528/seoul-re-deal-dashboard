@@ -15,7 +15,7 @@
 
 5. **순수 HTML/CSS/JS로 구현한다.** React·Vue 등 프레임워크나 별도 빌드 도구(webpack, vite 등)를 사용하지 않는다.
 6. **파일은 `index.html`, `style.css`, `app.js` 3개로 유지한다.** 마크업/스타일/로직을 이 3개 파일로 분리하고, 이 이상으로 파일을 늘리지 않는다.
-7. **데이터는 `localStorage`에 저장한다.** 앱 데이터를 브라우저의 `localStorage`에 저장·조회하여 새로고침 후에도 유지되도록 한다.
+7. **데이터는 Supabase에 저장한다.** 앱 데이터를 Supabase(Postgres) 테이블에 저장·조회한다. 클라이언트에서는 `supabase-js`를 CDN으로 불러와 사용하고, 별도 빌드 도구는 도입하지 않는다.
 
 ## 작업 규칙
 
