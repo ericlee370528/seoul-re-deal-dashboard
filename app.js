@@ -61,7 +61,7 @@
     assetTypes: new Set(),
     selectedGu: null, // null = 서울 전체(자치구 미선택)
     minAmount: 0,
-    maxAmount: 13000,
+    maxAmount: 50000,
     sortKey: "updatedAt"
   };
 
@@ -273,12 +273,12 @@
     state.assetTypes = new Set(uniqueValues("assetType"));
     state.selectedGu = null;
     state.minAmount = 0;
-    state.maxAmount = 13000;
+    state.maxAmount = 50000;
     state.sortKey = "updatedAt";
     document.getElementById("periodSelect").value = "2026";
     document.getElementById("sortSelect").value = "updatedAt";
     document.getElementById("minAmount").value = 0;
-    document.getElementById("maxAmount").value = 13000;
+    document.getElementById("maxAmount").value = 50000;
     renderChips("dealTypeChips", ["PF", "실물인수"], state.dealTypes);
     renderChips("assetTypeChips", uniqueValues("assetType"), state.assetTypes);
     updateMapActiveClasses();
@@ -324,9 +324,9 @@
     });
   }
 
-  function wireDistrictPaths() {
+  function wireDistrictPaths(root) {
     var counts = guDealCounts();
-    var paths = document.querySelectorAll(".gu-path");
+    var paths = (root || document).querySelectorAll(".gu-path");
     paths.forEach(function (p) {
       var gu = p.getAttribute("data-gu");
       if (counts[gu]) p.classList.add("has-deals");
@@ -366,7 +366,21 @@
   function initMap() {
     buildPathsInto("gyeonggiPaths", GYEONGGI_PATHS, GYEONGGI_NAME_MAP);
     buildPathsInto("incheonPaths", INCHEON_PATHS, INCHEON_NAME_MAP);
-    wireDistrictPaths();
+
+    // 서울 pane은 처음부터 보이므로 바로 라벨을 붙인다.
+    wireDistrictPaths(document.getElementById("paneSeoul"));
+
+    // 경기·인천 pane은 초기에 display:none 상태라 getBBox()가 예외를
+    // 던져 라벨(과 클릭 핸들러)이 전혀 붙지 않는다. 라벨을 계산하는
+    // 동안만 잠시 보이게 했다가 원래 상태로 되돌린다.
+    ["paneGyeonggi", "paneIncheon"].forEach(function (paneId) {
+      var pane = document.getElementById(paneId);
+      var wasActive = pane.classList.contains("active");
+      if (!wasActive) pane.classList.add("active");
+      wireDistrictPaths(pane);
+      if (!wasActive) pane.classList.remove("active");
+    });
+
     wireMapTabs();
     document.getElementById("mapResetBtn").addEventListener("click", function () {
       state.selectedGu = null;
