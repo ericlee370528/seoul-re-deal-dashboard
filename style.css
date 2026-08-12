@@ -167,6 +167,11 @@ tbody tr:hover { background: var(--accent-soft); }
   text-anchor: middle; dominant-baseline: middle; pointer-events: none;
   paint-order: stroke; stroke: var(--page-plane); stroke-width: 6px; stroke-linejoin: round;
 }
+/* 경기(viewBox 600)·인천(viewBox 500) 지도는 서울(viewBox 1400)보다
+   좌표계가 작아 같은 font-size가 훨씬 크게 보인다. 서울과 비슷한
+   실제 렌더링 크기가 되도록 viewBox 비율만큼 축소한다. */
+.gu-label.gu-label-gg { font-size: 13px; stroke-width: 2.6px; }
+.gu-label.gu-label-ic { font-size: 11px; stroke-width: 2.1px; }
 .map-side { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 .map-status { font-size: 13.5px; color: var(--text-secondary); background: var(--chip-bg); border-radius: 10px; padding: 8px 12px; }
 .map-note { font-size: 11px; color: var(--text-muted); }

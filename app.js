@@ -324,7 +324,7 @@
     });
   }
 
-  function wireDistrictPaths(root) {
+  function wireDistrictPaths(root, labelSizeClass) {
     var counts = guDealCounts();
     var paths = (root || document).querySelectorAll(".gu-path");
     paths.forEach(function (p) {
@@ -342,7 +342,7 @@
       var text = document.createElementNS(SVGNS, "text");
       text.setAttribute("x", bbox.x + bbox.width / 2);
       text.setAttribute("y", bbox.y + bbox.height / 2);
-      text.setAttribute("class", "gu-label");
+      text.setAttribute("class", "gu-label" + (labelSizeClass ? " " + labelSizeClass : ""));
       text.textContent = gu;
       labelsGroup.appendChild(text);
     });
@@ -373,11 +373,15 @@
     // 경기·인천 pane은 초기에 display:none 상태라 getBBox()가 예외를
     // 던져 라벨(과 클릭 핸들러)이 전혀 붙지 않는다. 라벨을 계산하는
     // 동안만 잠시 보이게 했다가 원래 상태로 되돌린다.
+    // 경기·인천 SVG는 viewBox가 서울보다 작아(600/500 vs 1400) 같은
+    // font-size를 쓰면 실제로는 서울보다 훨씬 크게 렌더링되므로,
+    // viewBox 비율에 맞춰 라벨 크기를 축소하는 클래스를 별도로 준다.
+    var LABEL_SIZE_CLASS = { paneGyeonggi: "gu-label-gg", paneIncheon: "gu-label-ic" };
     ["paneGyeonggi", "paneIncheon"].forEach(function (paneId) {
       var pane = document.getElementById(paneId);
       var wasActive = pane.classList.contains("active");
       if (!wasActive) pane.classList.add("active");
-      wireDistrictPaths(pane);
+      wireDistrictPaths(pane, LABEL_SIZE_CLASS[paneId]);
       if (!wasActive) pane.classList.remove("active");
     });
 
