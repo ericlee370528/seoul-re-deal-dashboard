@@ -1,0 +1,15 @@
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Claude Code local runtime state
+.claude/scheduled_tasks.lock
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Temp/scratch files created during development
+_check_*.png
+_test_*.html

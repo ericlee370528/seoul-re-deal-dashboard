@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주간 부동산 PF·실물 인수 딜 대시보드</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:     #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --good:           #006300;
+    --border:         rgba(11,11,11,0.10);
+    --badge-pf:       #2a78d6;
+    --badge-acq:      #eb6834;
+    --chip-bg:        #f0efe9;
+    --chip-bg-active: #0b0b0b;
+    --chip-fg-active: #ffffff;
+    --overlay:        rgba(11,11,11,0.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page-plane:     #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --good:           #0ca30c;
+      --border:         rgba(255,255,255,0.10);
+      --badge-pf:       #3987e5;
+      --badge-acq:      #d95926;
+      --chip-bg:        #262624;
+      --chip-bg-active: #ffffff;
+      --chip-fg-active: #0b0b0b;
+      --overlay:        rgba(0,0,0,0.55);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page-plane);
+    color: var(--text-primary);
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 24px 48px; }
+  header h1 { font-size: 20px; margin: 0 0 4px; }
+  header p { font-size: 13px; color: var(--text-secondary); margin: 0 0 18px; line-height: 1.5; }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 13px; margin: 0 0 12px; color: var(--text-muted); font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+
+  /* Filter bar */
+  .filter-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px; }
+  .filter-group { display: flex; flex-direction: column; gap: 6px; }
+  .filter-group label.gtitle { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; max-width: 420px; }
+  .chip {
+    border: 1px solid var(--border); background: var(--chip-bg); color: var(--text-secondary);
+    border-radius: 999px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; user-select: none;
+  }
+  .chip.active { background: var(--chip-bg-active); color: var(--chip-fg-active); border-color: transparent; }
+  select, input[type="number"] {
+    font-size: 13px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface-1); color: var(--text-primary); font-family: inherit;
+  }
+  .range-inputs { display: flex; align-items: center; gap: 6px; }
+  .range-inputs input { width: 80px; }
+  .btn-reset {
+    align-self: flex-end; margin-left: auto; font-size: 12.5px; color: var(--text-secondary);
+    background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  }
+  .btn-reset:hover { color: var(--text-primary); }
+
+  /* KPI stat tiles */
+  .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .tile { border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+  .tile .label { font-size: 12.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+  .tile .value { font-size: 24px; font-weight: 600; }
+  .tile .note { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .tile .split { display: flex; gap: 14px; margin-top: 6px; font-size: 12.5px; }
+  .tile .split span.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: #fff; white-space: nowrap; }
+  .badge.pf  { background: var(--badge-pf); }
+  .badge.acq { background: var(--badge-acq); }
+
+  /* List */
+  .list-head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--gridline); }
+  th { color: var(--text-muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .02em; }
+  td.amount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  th.amount { text-align: right; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--chip-bg); }
+  .empty-row td { text-align: center; color: var(--text-muted); padding: 24px; cursor: default; }
+  .empty-row:hover { background: transparent; }
+
+  /* Detail panel */
+  #overlay {
+    position: fixed; inset: 0; background: var(--overlay); opacity: 0; pointer-events: none;
+    transition: opacity .2s ease; z-index: 10;
+  }
+  #overlay.open { opacity: 1; pointer-events: auto; }
+  #detailPanel {
+    position: fixed; top: 0; right: 0; height: 100%; width: 420px; max-width: 92vw;
+    background: var(--surface-1); border-left: 1px solid var(--border);
+    box-shadow: -8px 0 24px rgba(0,0,0,0.18);
+    transform: translateX(100%); transition: transform .25s ease;
+    z-index: 11; overflow-y: auto; padding: 22px;
+  }
+  #detailPanel.open { transform: translateX(0); }
+  #detailPanel .close-btn {
+    background: transparent; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;
+    float: right; line-height: 1;
+  }
+  #detailPanel h3 { font-size: 17px; margin: 4px 0 8px; }
+  #detailPanel .badges { margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+  #detailPanel .badge.stage, #detailPanel .badge.tag { background: var(--chip-bg); color: var(--text-secondary); }
+  #detailPanel .amount-block { font-size: 20px; font-weight: 700; margin: 10px 0 2px; }
+  #detailPanel .amount-calc { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+  #detailPanel .field { margin-bottom: 14px; }
+  #detailPanel .field .flabel { font-size: 11.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+  #detailPanel .field .fval { font-size: 13.5px; line-height: 1.6; }
+  #detailPanel .timeline-item { font-size: 13px; margin-bottom: 8px; padding-left: 10px; border-left: 2px solid var(--gridline); }
+  #detailPanel .timeline-item .tdate { font-size: 11.5px; color: var(--text-muted); }
+  #detailPanel a { color: var(--badge-pf); }
+
+  @media (max-width: 900px) {
+    .kpi-row { grid-template-columns: 1fr; }
+    .filter-row { flex-direction: column; }
+    .chips { max-width: none; }
+    th.region-col, td.region-col, th.stage-col, td.stage-col { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="wrap">
+    <header>
+      <h1>주간 부동산 PF·실물 인수 딜 대시보드</h1>
+      <p>지난 1주일간 발생한 부동산 PF 딜과 실물 인수 딜의 핵심 정보를 한 화면에서 확인합니다. 데이터는 매주 수동으로 갱신됩니다(1차 버전 범위: 자동 연동 없음).</p>
+    </header>
+
+    <section class="card">
+      <h2>필터</h2>
+      <div class="filter-row">
+        <div class="filter-group">
+          <label class="gtitle">기간</label>
+          <select id="periodSelect">
+            <option value="7" selected>최근 7일</option>
+            <option value="14">최근 14일</option>
+            <option value="all">전체</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="gtitle">딜 유형</label>
+          <div class="chips" id="dealTypeChips"></div>
+        </div>
+        <div class="filter-group">
+          <label class="gtitle">자산유형</label>
+          <div class="chips" id="assetTypeChips"></div>
+        </div>
+        <div class="filter-group">
+          <label class="gtitle">지역</label>
+          <div class="chips" id="regionChips"></div>
+        </div>
+        <div class="filter-group">
+          <label class="gtitle">딜규모(억원)</label>
+          <div class="range-inputs">
+            <input type="number" id="minAmount" min="0" step="10" value="0"> ~
+            <input type="number" id="maxAmount" min="0" step="10" value="3500">
+          </div>
+        </div>
+        <div class="filter-group">
+          <label class="gtitle">정렬</label>
+          <select id="sortSelect">
+            <option value="updatedAt" selected>최신순</option>
+            <option value="amount">규모순</option>
+          </select>
+        </div>
+        <button class="btn-reset" id="resetBtn">필터 초기화</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>요약 KPI</h2>
+      <div class="kpi-row" id="kpiRow"></div>
+    </section>
+
+    <section class="card">
+      <div class="list-head-row">
+        <h2 style="margin:0;">딜 리스트</h2>
+        <span id="listCount" style="font-size:12.5px;color:var(--text-muted);"></span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:78px;">유형</th>
+            <th>딜명</th>
+            <th>자산유형</th>
+            <th class="region-col">지역</th>
+            <th class="amount">딜규모(억원)</th>
+            <th class="stage-col">진행단계</th>
+            <th>주요 참여사</th>
+            <th>업데이트일</th>
+          </tr>
+        </thead>
+        <tbody id="listBody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div id="overlay"></div>
+  <aside id="detailPanel">
+    <button class="close-btn" id="closeDetailBtn" aria-label="닫기">&times;</button>
+    <div id="detailContent"></div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  // ---------------------------------------------------------------
+  // DEALS: 딜 데이터. 매주 이 배열을 수동으로 갱신한다 (1차 버전 범위: 자동 연동 없음).
+  // 필드 설명:
+  //   id             : 고유 식별자
+  //   dealName       : 딜 명칭
+  //   dealType       : "PF" | "실물인수"
+  //   assetType      : 자산유형 (오피스/리테일/물류/주거/호텔/복합 등)
+  //   region         : 지역 (서울/경기/인천/부산/대전 등)
+  //   stage          : 진행단계 (PF: 브릿지/본PF/클로징, 실물인수: LOI/실사중/계약체결/클로징)
+  //   amountKrwRaw   : 원 단위 원본 금액
+  //   amountEok      : 억원 = amountKrwRaw / 100,000,000 (계산 근거로 상세 패널에 노출됨)
+  //   leadArrangers  : 주선사 목록
+  //   participants   : 참여사 목록
+  //   createdAt      : 최초 등록일 (ISO date)
+  //   updatedAt      : 최종 업데이트일 (ISO date, 필터/정렬 기준)
+  //   summary        : 딜 개요 1~2문장
+  //   progressNotes  : 진행 경과 [{date, note}]
+  //   referenceLinks : 관련 자료 링크 [{label, url}]
+  //
+  // 예시 1건:
+  // { id:"D-2026-0000", dealName:"OO 개발 PF", dealType:"PF", assetType:"오피스", region:"서울",
+  //   stage:"본PF", amountKrwRaw:100000000000, amountEok:1000, leadArrangers:["OO증권"],
+  //   participants:["OO자산운용"], createdAt:"2026-08-01", updatedAt:"2026-08-08",
+  //   summary:"...", progressNotes:[{date:"2026-08-08", note:"..."}],
+  //   referenceLinks:[{label:"내부 검토 메모", url:"#"}] }
+  // ---------------------------------------------------------------
+  var DEALS = [
+    { id:"D-2026-0031", dealName:"광화문 A오피스 개발 PF", dealType:"PF", assetType:"오피스", region:"서울",
+      stage:"본PF", amountKrwRaw:125000000000, amountEok:1250, leadArrangers:["KB증권","신한은행"],
+      participants:["삼성자산운용"], createdAt:"2026-07-20", updatedAt:"2026-08-06",
+      summary:"광화문 소재 A급 오피스 신축 개발사업의 본PF 전환 건.",
+      progressNotes:[{date:"2026-07-20",note:"브릿지론 실행"},{date:"2026-08-06",note:"본PF 약정 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0032", dealName:"강남 리테일 빌딩 실물 인수", dealType:"실물인수", assetType:"리테일", region:"서울",
+      stage:"계약체결", amountKrwRaw:48000000000, amountEok:480, leadArrangers:["미래에셋증권"],
+      participants:["이지스자산운용","코람코자산신탁"], createdAt:"2026-07-28", updatedAt:"2026-08-07",
+      summary:"강남대로변 리테일 빌딩 실물 인수 계약 체결.",
+      progressNotes:[{date:"2026-07-28",note:"LOI 체결"},{date:"2026-08-07",note:"매매계약 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0033", dealName:"이천 물류센터 개발 PF", dealType:"PF", assetType:"물류", region:"경기",
+      stage:"브릿지", amountKrwRaw:95000000000, amountEok:950, leadArrangers:["하나증권"],
+      participants:["ESR켄달스퀘어"], createdAt:"2026-08-01", updatedAt:"2026-08-06",
+      summary:"이천 소재 저온물류센터 개발사업 브릿지론 실행.",
+      progressNotes:[{date:"2026-08-01",note:"토지 매입 완료"},{date:"2026-08-06",note:"브릿지론 실행"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0034", dealName:"판교 오피스텔 개발 PF", dealType:"PF", assetType:"오피스", region:"경기",
+      stage:"본PF", amountKrwRaw:125000000000, amountEok:1250, leadArrangers:["A증권","B은행"],
+      participants:["C자산운용","D캐피탈"], createdAt:"2026-08-06", updatedAt:"2026-08-10",
+      summary:"판교 알파돔시티 인근 오피스텔 개발사업 본PF 전환.",
+      progressNotes:[{date:"2026-08-06",note:"브릿지론 상환, 본PF 약정 체결"},{date:"2026-08-10",note:"시공사 선정 완료"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0035", dealName:"여의도 호텔 실물 인수", dealType:"실물인수", assetType:"호텔", region:"서울",
+      stage:"실사중", amountKrwRaw:220000000000, amountEok:2200, leadArrangers:["NH투자증권"],
+      participants:["마스턴투자운용"], createdAt:"2026-08-02", updatedAt:"2026-08-08",
+      summary:"여의도 소재 비즈니스 호텔 실물 인수를 위한 실사 진행 중.",
+      progressNotes:[{date:"2026-08-02",note:"LOI 체결"},{date:"2026-08-08",note:"실사 착수"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0036", dealName:"송도 주거복합 개발 PF", dealType:"PF", assetType:"주거", region:"인천",
+      stage:"클로징", amountKrwRaw:68000000000, amountEok:680, leadArrangers:["키움증권"],
+      participants:["신영자산운용"], createdAt:"2026-07-15", updatedAt:"2026-08-09",
+      summary:"송도국제도시 주거복합 개발사업 PF 클로징.",
+      progressNotes:[{date:"2026-07-15",note:"본PF 약정"},{date:"2026-08-09",note:"펀딩 클로징 완료"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0037", dealName:"을지로 오피스 인수 검토", dealType:"실물인수", assetType:"오피스", region:"서울",
+      stage:"LOI", amountKrwRaw:300000000000, amountEok:3000, leadArrangers:["삼성증권"],
+      participants:["캡스톤자산운용"], createdAt:"2026-08-11", updatedAt:"2026-08-11",
+      summary:"을지로 대형 오피스빌딩 인수를 위한 LOI 체결.",
+      progressNotes:[{date:"2026-08-11",note:"LOI 체결, 우선협상대상자 선정"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0038", dealName:"해운대 상가 개발 PF", dealType:"PF", assetType:"리테일", region:"부산",
+      stage:"브릿지", amountKrwRaw:32000000000, amountEok:320, leadArrangers:["부산은행"],
+      participants:["로컬디벨로퍼"], createdAt:"2026-08-05", updatedAt:"2026-08-07",
+      summary:"해운대 상업시설 개발사업 브릿지론 실행.",
+      progressNotes:[{date:"2026-08-05",note:"사업부지 확보"},{date:"2026-08-07",note:"브릿지론 실행"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0039", dealName:"용인 물류센터 인수", dealType:"실물인수", assetType:"물류", region:"경기",
+      stage:"계약체결", amountKrwRaw:89000000000, amountEok:890, leadArrangers:["한국투자증권"],
+      participants:["ARA코리아"], createdAt:"2026-07-30", updatedAt:"2026-08-12",
+      summary:"용인 소재 상온물류센터 실물 인수 계약 체결.",
+      progressNotes:[{date:"2026-07-30",note:"LOI 체결"},{date:"2026-08-12",note:"매매계약 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0040", dealName:"잠실 복합시설 개발 PF", dealType:"PF", assetType:"복합", region:"서울",
+      stage:"본PF", amountKrwRaw:180000000000, amountEok:1800, leadArrangers:["미래에셋증권","KB증권"],
+      participants:["롯데자산개발"], createdAt:"2026-07-25", updatedAt:"2026-08-12",
+      summary:"잠실 인근 주상복합 개발사업 본PF 전환.",
+      progressNotes:[{date:"2026-07-25",note:"브릿지론 실행"},{date:"2026-08-12",note:"본PF 약정 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0041", dealName:"대전 오피스텔 인수 실사", dealType:"실물인수", assetType:"주거", region:"대전",
+      stage:"실사중", amountKrwRaw:21000000000, amountEok:210, leadArrangers:["대신증권"],
+      participants:["지방리츠"], createdAt:"2026-08-04", updatedAt:"2026-08-06",
+      summary:"대전 소재 오피스텔 실물 인수 실사 진행 중.",
+      progressNotes:[{date:"2026-08-04",note:"LOI 체결"},{date:"2026-08-06",note:"실사 착수"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0042", dealName:"부산 센텀 오피스 PF 클로징", dealType:"PF", assetType:"오피스", region:"부산",
+      stage:"클로징", amountKrwRaw:56000000000, amountEok:560, leadArrangers:["부국증권"],
+      participants:["센텀자산운용"], createdAt:"2026-07-10", updatedAt:"2026-08-10",
+      summary:"센텀시티 오피스 개발사업 PF 클로징.",
+      progressNotes:[{date:"2026-07-10",note:"본PF 약정"},{date:"2026-08-10",note:"펀딩 클로징 완료"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0043", dealName:"판교 호텔 인수 검토", dealType:"실물인수", assetType:"호텔", region:"경기",
+      stage:"LOI", amountKrwRaw:140000000000, amountEok:1400, leadArrangers:["신한투자증권"],
+      participants:["JR자산운용"], createdAt:"2026-08-09", updatedAt:"2026-08-09",
+      summary:"판교 소재 비즈니스 호텔 인수를 위한 LOI 체결.",
+      progressNotes:[{date:"2026-08-09",note:"LOI 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0044", dealName:"인천공항 물류단지 개발 PF", dealType:"PF", assetType:"물류", region:"인천",
+      stage:"본PF", amountKrwRaw:73000000000, amountEok:730, leadArrangers:["교보증권"],
+      participants:["e쇼퍼링크"], createdAt:"2026-07-22", updatedAt:"2026-08-08",
+      summary:"인천공항 인근 물류단지 개발사업 본PF 전환.",
+      progressNotes:[{date:"2026-07-22",note:"브릿지론 실행"},{date:"2026-08-08",note:"본PF 약정 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0045", dealName:"홍대 리테일 소형빌딩 인수", dealType:"실물인수", assetType:"리테일", region:"서울",
+      stage:"계약체결", amountKrwRaw:15000000000, amountEok:150, leadArrangers:["유진투자증권"],
+      participants:["개인투자자 컨소시엄"], createdAt:"2026-08-03", updatedAt:"2026-08-11",
+      summary:"홍대 상권 소형 리테일 빌딩 매매계약 체결.",
+      progressNotes:[{date:"2026-08-03",note:"LOI 체결"},{date:"2026-08-11",note:"매매계약 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0046", dealName:"목동 재건축 연계 PF", dealType:"PF", assetType:"주거", region:"서울",
+      stage:"브릿지", amountKrwRaw:99000000000, amountEok:990, leadArrangers:["DB금융투자"],
+      participants:["목동조합"], createdAt:"2026-08-08", updatedAt:"2026-08-12",
+      summary:"목동 재건축 연계 이주비 대출 브릿지론 실행.",
+      progressNotes:[{date:"2026-08-08",note:"이주계획 확정"},{date:"2026-08-12",note:"브릿지론 실행"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0047", dealName:"부산 복합쇼핑몰 인수 실사", dealType:"실물인수", assetType:"복합", region:"부산",
+      stage:"실사중", amountKrwRaw:64000000000, amountEok:640, leadArrangers:["한화투자증권"],
+      participants:["부산리츠"], createdAt:"2026-08-01", updatedAt:"2026-08-07",
+      summary:"부산 소재 복합쇼핑몰 실물 인수 실사 진행 중.",
+      progressNotes:[{date:"2026-08-01",note:"LOI 체결"},{date:"2026-08-07",note:"실사 착수"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0048", dealName:"대전 오피스 PF 클로징(전주)", dealType:"PF", assetType:"오피스", region:"대전",
+      stage:"클로징", amountKrwRaw:30000000000, amountEok:300, leadArrangers:["IBK투자증권"],
+      participants:["대전자산운용"], createdAt:"2026-07-01", updatedAt:"2026-08-05",
+      summary:"대전 오피스 개발사업 PF 클로징(전주 발생, 기간 필터 테스트용).",
+      progressNotes:[{date:"2026-07-01",note:"본PF 약정"},{date:"2026-08-05",note:"펀딩 클로징 완료"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0049", dealName:"성수 물류 인수 LOI(전전주)", dealType:"실물인수", assetType:"물류", region:"서울",
+      stage:"LOI", amountKrwRaw:110000000000, amountEok:1100, leadArrangers:["다올투자증권"],
+      participants:["성수리츠"], createdAt:"2026-08-03", updatedAt:"2026-08-03",
+      summary:"성수동 도심형 물류센터 인수 LOI 체결(기간 필터 테스트용).",
+      progressNotes:[{date:"2026-08-03",note:"LOI 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] },
+    { id:"D-2026-0050", dealName:"수원 리테일 PF 본PF 전환(구건)", dealType:"PF", assetType:"리테일", region:"경기",
+      stage:"본PF", amountKrwRaw:42000000000, amountEok:420, leadArrangers:["SK증권"],
+      participants:["수원디벨로퍼"], createdAt:"2026-07-01", updatedAt:"2026-07-30",
+      summary:"수원 리테일 개발사업 본PF 전환(기간 필터 테스트용, 3주 전 발생).",
+      progressNotes:[{date:"2026-07-01",note:"브릿지론 실행"},{date:"2026-07-30",note:"본PF 약정 체결"}],
+      referenceLinks:[{label:"내부 검토 메모", url:"#"}] }
+  ];
+
+  var state = {
+    period: "7",
+    dealTypes: new Set(["PF", "실물인수"]),
+    assetTypes: new Set(uniqueValues("assetType")),
+    regions: new Set(uniqueValues("region")),
+    minAmount: 0,
+    maxAmount: 3500,
+    sortKey: "updatedAt"
+  };
+
+  function uniqueValues(field) {
+    var seen = {}; var out = [];
+    DEALS.forEach(function (d) { if (!seen[d[field]]) { seen[d[field]] = true; out.push(d[field]); } });
+    return out;
+  }
+
+  function fmt0(n) { return Math.round(n).toLocaleString("ko-KR"); }
+
+  function withinPeriod(deal) {
+    if (state.period === "all") return true;
+    var days = parseInt(state.period, 10);
+    var cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - days + 1);
+    var updated = new Date(deal.updatedAt + "T00:00:00");
+    return updated >= cutoff;
+  }
+
+  function applyFilters() {
+    var result = DEALS.filter(function (d) {
+      return withinPeriod(d) &&
+        state.dealTypes.has(d.dealType) &&
+        state.assetTypes.has(d.assetType) &&
+        state.regions.has(d.region) &&
+        d.amountEok >= state.minAmount &&
+        d.amountEok <= state.maxAmount;
+    });
+    result.sort(function (a, b) {
+      if (state.sortKey === "amount") return b.amountEok - a.amountEok;
+      return new Date(b.updatedAt) - new Date(a.updatedAt);
+    });
+    return result;
+  }
+
+  // ---------- Chips (dealType / assetType / region) ----------
+  function renderChips(containerId, values, activeSet) {
+    var container = document.getElementById(containerId);
+    container.innerHTML = "";
+    values.forEach(function (v) {
+      var chip = document.createElement("span");
+      chip.className = "chip" + (activeSet.has(v) ? " active" : "");
+      chip.textContent = v;
+      chip.addEventListener("click", function () {
+        if (activeSet.has(v)) { activeSet.delete(v); } else { activeSet.add(v); }
+        chip.classList.toggle("active");
+        refresh();
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  // ---------- KPI ----------
+  function renderKPI(deals) {
+    var kpiRow = document.getElementById("kpiRow");
+    kpiRow.innerHTML = "";
+
+    var totalEok = deals.reduce(function (sum, d) { return sum + d.amountEok; }, 0);
+    var pfCount = deals.filter(function (d) { return d.dealType === "PF"; }).length;
+    var acqCount = deals.length - pfCount;
+    var pfPct = deals.length ? Math.round((pfCount / deals.length) * 100) : 0;
+    var acqPct = deals.length ? 100 - pfPct : 0;
+
+    var tile1 = document.createElement("div");
+    tile1.className = "tile";
+    tile1.innerHTML =
+      '<div class="label">신규/업데이트 딜 건수</div>' +
+      '<div class="value">' + deals.length + '건</div>' +
+      '<div class="note">현재 필터 조건 기준</div>';
+    kpiRow.appendChild(tile1);
+
+    var tile2 = document.createElement("div");
+    tile2.className = "tile";
+    tile2.innerHTML =
+      '<div class="label">총 딜 규모 합계</div>' +
+      '<div class="value">' + fmt0(totalEok) + '억원</div>' +
+      '<div class="note">' + fmt0(totalEok) + '억원 = 리스트에 표시된 ' + deals.length + '건 딜규모(억원) 합계</div>';
+    kpiRow.appendChild(tile2);
+
+    var tile3 = document.createElement("div");
+    tile3.className = "tile";
+    tile3.innerHTML =
+      '<div class="label">PF / 실물인수 비중</div>' +
+      '<div class="value">' + pfPct + '% / ' + acqPct + '%</div>' +
+      '<div class="split">' +
+        '<span><span class="dot" style="background:var(--badge-pf)"></span>PF ' + pfCount + '건</span>' +
+        '<span><span class="dot" style="background:var(--badge-acq)"></span>실물인수 ' + acqCount + '건</span>' +
+      '</div>';
+    kpiRow.appendChild(tile3);
+  }
+
+  // ---------- List ----------
+  function badgeHtml(dealType) {
+    var cls = dealType === "PF" ? "pf" : "acq";
+    return '<span class="badge ' + cls + '">' + dealType + '</span>';
+  }
+
+  function renderList(deals) {
+    var tbody = document.getElementById("listBody");
+    tbody.innerHTML = "";
+    document.getElementById("listCount").textContent = deals.length + "건 표시 중 (전체 " + DEALS.length + "건)";
+
+    if (!deals.length) {
+      var emptyTr = document.createElement("tr");
+      emptyTr.className = "empty-row";
+      emptyTr.innerHTML = '<td colspan="8">조건에 맞는 딜이 없습니다.</td>';
+      tbody.appendChild(emptyTr);
+      return;
+    }
+
+    deals.forEach(function (d) {
+      var tr = document.createElement("tr");
+      var allParties = d.leadArrangers.concat(d.participants);
+      var partyText = d.leadArrangers.join(", ") + (d.participants.length ? " 외 " + d.participants.length + "곳" : "");
+      tr.innerHTML =
+        "<td>" + badgeHtml(d.dealType) + "</td>" +
+        "<td>" + d.dealName + "</td>" +
+        "<td>" + d.assetType + "</td>" +
+        '<td class="region-col">' + d.region + "</td>" +
+        '<td class="amount" title="' + fmt0(d.amountEok) + '억원 = ' + d.amountKrwRaw.toLocaleString("ko-KR") + '원 ÷ 100,000,000">' + fmt0(d.amountEok) + "</td>" +
+        '<td class="stage-col">' + d.stage + "</td>" +
+        "<td>" + partyText + "</td>" +
+        "<td>" + d.updatedAt + "</td>";
+      tr.addEventListener("click", function () { openDetail(d.id); });
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---------- Detail panel ----------
+  function openDetail(id) {
+    var d = DEALS.filter(function (x) { return x.id === id; })[0];
+    if (!d) return;
+    var content = document.getElementById("detailContent");
+    var timelineHtml = d.progressNotes.map(function (p) {
+      return '<div class="timeline-item"><div class="tdate">' + p.date + '</div>' + p.note + '</div>';
+    }).join("");
+    var linksHtml = d.referenceLinks.map(function (l) {
+      return '<a href="' + l.url + '" target="_blank" rel="noopener">' + l.label + '</a>';
+    }).join(" · ");
+
+    content.innerHTML =
+      '<div class="badges">' + badgeHtml(d.dealType) +
+        '<span class="badge tag">' + d.assetType + '</span>' +
+        '<span class="badge tag">' + d.region + '</span>' +
+        '<span class="badge stage">' + d.stage + '</span></div>' +
+      '<h3>' + d.dealName + '</h3>' +
+      '<div class="amount-block">' + fmt0(d.amountEok) + '억원</div>' +
+      '<div class="amount-calc">' + fmt0(d.amountEok) + '억원 = ' + d.amountKrwRaw.toLocaleString("ko-KR") + '원 ÷ 100,000,000</div>' +
+      '<div class="field"><div class="flabel">딜 개요</div><div class="fval">' + d.summary + '</div></div>' +
+      '<div class="field"><div class="flabel">주선사</div><div class="fval">' + d.leadArrangers.join(", ") + '</div></div>' +
+      '<div class="field"><div class="flabel">참여사</div><div class="fval">' + d.participants.join(", ") + '</div></div>' +
+      '<div class="field"><div class="flabel">진행 경과</div><div class="fval">' + timelineHtml + '</div></div>' +
+      '<div class="field"><div class="flabel">등록일 / 업데이트일</div><div class="fval">' + d.createdAt + ' / ' + d.updatedAt + '</div></div>' +
+      '<div class="field"><div class="flabel">관련 자료</div><div class="fval">' + linksHtml + '</div></div>';
+
+    document.getElementById("overlay").classList.add("open");
+    document.getElementById("detailPanel").classList.add("open");
+  }
+
+  function closeDetail() {
+    document.getElementById("overlay").classList.remove("open");
+    document.getElementById("detailPanel").classList.remove("open");
+  }
+
+  document.getElementById("overlay").addEventListener("click", closeDetail);
+  document.getElementById("closeDetailBtn").addEventListener("click", closeDetail);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDetail(); });
+
+  // ---------- Filter controls wiring ----------
+  document.getElementById("periodSelect").addEventListener("change", function (e) {
+    state.period = e.target.value;
+    refresh();
+  });
+  document.getElementById("sortSelect").addEventListener("change", function (e) {
+    state.sortKey = e.target.value;
+    refresh();
+  });
+  document.getElementById("minAmount").addEventListener("input", function (e) {
+    state.minAmount = Number(e.target.value) || 0;
+    refresh();
+  });
+  document.getElementById("maxAmount").addEventListener("input", function (e) {
+    state.maxAmount = Number(e.target.value) || 0;
+    refresh();
+  });
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    state.period = "7";
+    state.dealTypes = new Set(["PF", "실물인수"]);
+    state.assetTypes = new Set(uniqueValues("assetType"));
+    state.regions = new Set(uniqueValues("region"));
+    state.minAmount = 0;
+    state.maxAmount = 3500;
+    state.sortKey = "updatedAt";
+    document.getElementById("periodSelect").value = "7";
+    document.getElementById("sortSelect").value = "updatedAt";
+    document.getElementById("minAmount").value = 0;
+    document.getElementById("maxAmount").value = 3500;
+    renderChips("dealTypeChips", ["PF", "실물인수"], state.dealTypes);
+    renderChips("assetTypeChips", uniqueValues("assetType"), state.assetTypes);
+    renderChips("regionChips", uniqueValues("region"), state.regions);
+    refresh();
+  });
+
+  function refresh() {
+    var filtered = applyFilters();
+    renderList(filtered);
+    renderKPI(filtered);
+  }
+
+  // ---------- Init ----------
+  renderChips("dealTypeChips", ["PF", "실물인수"], state.dealTypes);
+  renderChips("assetTypeChips", uniqueValues("assetType"), state.assetTypes);
+  renderChips("regionChips", uniqueValues("region"), state.regions);
+  refresh();
+})();
+</script>
+</body>
+</html>

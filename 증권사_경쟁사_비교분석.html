@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미래에셋증권 vs 키움증권 경쟁사 분석</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:     #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --border:         rgba(11,11,11,0.10);
+    --good:           #006300;
+    --warn:           #8a5a00;
+    --warn-bg:        #f3e6cf;
+    --good-bg:        #dcecdc;
+    --series-1:       #2a78d6; /* 미래에셋증권 */
+    --series-2:       #eb6834; /* 키움증권 */
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page-plane:     #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --border:         rgba(255,255,255,0.10);
+      --good:           #0ca30c;
+      --warn:           #d99a2b;
+      --warn-bg:        #3a2f16;
+      --good-bg:        #163a1c;
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page-plane); color: var(--text-primary); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 24px 56px; }
+  header h1 { font-size: 21px; margin: 0 0 6px; }
+  header p.meta { font-size: 12.5px; color: var(--text-muted); margin: 0 0 20px; line-height: 1.6; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin-bottom: 18px; }
+  .card h2 { font-size: 13px; margin: 0 0 12px; color: var(--text-muted); font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+
+  /* 결론 카드 */
+  .conclusion-card { border-left: 3px solid var(--series-1); }
+  .conclusion-list { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8; }
+  .conclusion-list li { margin-bottom: 10px; }
+  .conclusion-list .calc { font-size: 12px; color: var(--text-muted); }
+
+  /* 비교 표 */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--gridline); vertical-align: top; }
+  th { color: var(--text-muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .02em; }
+  th.company-1 { color: var(--series-1); }
+  th.company-2 { color: var(--series-2); }
+  td.category { font-weight: 600; white-space: nowrap; width: 130px; }
+  .cell-value { font-size: 13px; line-height: 1.55; margin-bottom: 6px; }
+  .status { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; margin-right: 6px; }
+  .status.ok { background: var(--good-bg); color: var(--good); }
+  .status.warn { background: var(--warn-bg); color: var(--warn); }
+  .src { font-size: 11.5px; }
+  .src a { color: var(--text-secondary); }
+  .note-inline { font-size: 11.5px; color: var(--text-muted); display: block; margin-top: 3px; line-height: 1.5; }
+
+  /* 방법론 카드 */
+  .method-list { margin: 0; padding-left: 20px; font-size: 12.5px; line-height: 1.8; color: var(--text-secondary); }
+  .caveat { background: var(--warn-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: var(--text-primary); margin-top: 10px; line-height: 1.6; }
+
+  @media (max-width: 720px) {
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    td.category { width: auto; border-bottom: none; padding-bottom: 2px; color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; }
+    td { border-bottom: none; padding: 6px 4px; }
+    tr { border-bottom: 2px solid var(--gridline); padding-bottom: 8px; margin-bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="wrap">
+    <header>
+      <h1>미래에셋증권 vs 키움증권 경쟁사 분석</h1>
+      <p class="meta">
+        공개 출처(보도자료·앱스토어·공식 홈페이지)만을 대상으로 서브에이전트가 회사별로 병렬 조사한 뒤, 별도의 독립 조사자가 동일 출처를 재검증했습니다.
+        원출처에서 확인되지 않은 항목은 <strong>미확인</strong>으로 표시했습니다. (조사 기준일: 2026-08-12)
+      </p>
+    </header>
+
+    <section class="card conclusion-card">
+      <h2>결론 · 시사점 3가지</h2>
+      <ol class="conclusion-list">
+        <li>
+          <strong>수익성은 미래에셋증권 우위.</strong> 2026년 2분기 영업이익률은 미래에셋증권 약 11.5%, 키움증권 약 4.9%로 매출 규모 대비 수익성 격차가 뚜렷하다.
+          <span class="calc">11.5% = 영업이익 24,899억원 ÷ 매출액 216,314억원 × 100 · 4.9% = 영업이익 7,890억원 ÷ 매출액 160,732억원 × 100</span>
+        </li>
+        <li>
+          <strong>성장성과 시장지위의 방향이 상반된다.</strong> 키움증권은 2026년 2분기 매출액이 전년동기대비 +256.7%, 순이익 +119.4%로 급성장한 반면,
+          미래에셋증권은 자체 IR 공시 기준 위탁매매 시장점유율(M/S)이 1분기 13.2%에서 2분기 12.4%로 0.8%p 하락해, 같은 기간 두 회사가 각각 "성장 가속(키움)"과 "브로커리지 점유율 둔화(미래에셋)"라는 다른 흐름을 보인다.
+        </li>
+        <li>
+          <strong>리테일 MTS 앱 만족도 격차가 크다.</strong> 미래에셋증권 M-STOCK 앱의 App Store 평점은 3.9/5.0(리뷰 약 7,100개)인 반면,
+          키움증권 영웅문S#(NEW) 앱은 1.8/5.0(리뷰 약 2,800개)로 격차가 크다.
+          <span class="calc">격차 2.1점 = 3.9 − 1.8</span>
+        </li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>회사별 비교</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:130px;">항목</th>
+            <th class="company-1">미래에셋증권</th>
+            <th class="company-2">키움증권</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="category">실적(2026 2Q)</td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨</span>매출액 216,314억원 · 영업이익 24,899억원 · 당기순이익 19,052억원 (연결, IR 공시 원자료 환산)</div>
+              <div class="src">출처: <a href="https://securities.miraeasset.com/newir/view/pc/kr/investor/financialsReports.jsp" target="_blank" rel="noopener">공식 홈페이지(IR 재무제표·실적보고서)</a></div>
+            </td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨</span>매출액 160,732억원(+256.7% YoY) · 영업이익 7,890억원(+93.2%) · 순이익 6,806억원(+119.4%)</div>
+              <div class="src">출처: <a href="https://www.dt.co.kr/article/12075586" target="_blank" rel="noopener">언론보도(디지털타임스 등, 공식 잠정실적 공시 보도)</a></div>
+              <span class="note-inline">※ 공식 IR 페이지가 자바스크립트로 렌더링되어 원 데이터 직접 확인이 불가했음. 동일 수치를 보도한 복수 매체(디지털타임스·뉴스토모토·이지경제·서울경제)를 교차 대조해 확인 처리함 — 엄밀히는 "공식 홈페이지" 출처 원칙에서 벗어난 예외 처리이므로 참고 바람.</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="category">App Store 평점</td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨</span>3.9 / 5.0 (리뷰 약 7,100개, M-STOCK)</div>
+              <div class="src">출처: <a href="https://apps.apple.com/kr/app/%EB%AF%B8%EB%9E%98%EC%97%90%EC%85%8B%EC%A6%9D%EA%B6%8C-m-stock/id1248716281" target="_blank" rel="noopener">App Store</a></div>
+            </td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨</span>1.8 / 5.0 (리뷰 약 2,800개, 영웅문S#(NEW))</div>
+              <div class="src">출처: <a href="https://apps.apple.com/kr/app/%ED%82%A4%EC%9B%80%EC%A6%9D%EA%B6%8C-%EC%98%81%EC%9B%85%EB%AC%B8s-new/id1570370057" target="_blank" rel="noopener">App Store</a></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="category">Google Play 평점</td>
+            <td>
+              <div class="cell-value"><span class="status warn">미확인</span>평점 4.4/5.0·리뷰 61,923건으로 조사됐으나 재검증 과정에서 원출처 페이지 접근이 반복 실패해 확정하지 못함</div>
+              <div class="src">출처(미확정): <a href="https://play.google.com/store/apps/details?id=com.miraeasset.trade&hl=ko&gl=KR" target="_blank" rel="noopener">Google Play</a></div>
+            </td>
+            <td>
+              <div class="cell-value"><span class="status warn">미확인</span>평점 약 3.3/5.0은 검색으로 확인되나, 정확한 리뷰 개수는 페이지 렌더링 문제로 확인 불가</div>
+              <div class="src">출처(미확정): <a href="https://play.google.com/store/apps/details?id=com.kiwoom.heromts" target="_blank" rel="noopener">Google Play</a></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="category">국내주식 수수료</td>
+            <td>
+              <div class="cell-value"><span class="status warn">미확인</span>공식 수수료 안내 페이지는 존재하나, 조사·검증 과정에서 채널별 수수료율 대응 오류가 발견되어 확정하지 못함</div>
+              <div class="src">출처(미확정): <a href="https://securities.miraeasset.com/public/mw/guide/html/20191119095045.html" target="_blank" rel="noopener">공식 홈페이지(수수료 안내)</a></div>
+            </td>
+            <td>
+              <div class="cell-value"><span class="status warn">미확인</span>공식 수수료 안내 페이지가 자바스크립트로 렌더링되어 수치를 직접 확인하지 못함</div>
+              <div class="src">출처(미확정): <a href="https://www.kiwoom.com/h/help/fee/VHelpStockFeeView" target="_blank" rel="noopener">공식 홈페이지(수수료 안내)</a></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="category">최근 1년 신규 서비스</td>
+            <td>
+              <div class="cell-value"><span class="status warn">미확인</span>"Digital X" 디지털자산 플랫폼 관련 발표는 확인되나, 미래에셋증권 단독이 아닌 그룹 차원 발표로 확인되어 항목 그대로는 미확정 처리</div>
+              <div class="src">출처: <a href="https://securities.miraeasset.com/newir/view/pc/kr/about/newsList.jsp" target="_blank" rel="noopener">보도자료</a></div>
+            </td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨</span>'키움 발행어음' 출시 (2026-01-09~03-09, 최소가입금액 100만원, 수시형/약정형/적립형)</div>
+              <div class="src">출처: <a href="https://www.kiwoom.com/e/m/wm/event/evtUserEC250075View" target="_blank" rel="noopener">공식 홈페이지(이벤트 페이지)</a></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="category">자체 발표 시장지위</td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨</span>위탁매매 시장점유율(M/S) 12.4% (전분기 13.2% → 2Q26 12.4%, −0.8%p)</div>
+              <div class="src">출처: <a href="https://securities.miraeasset.com/newir/view/pc/kr/investor/financialsReports.jsp" target="_blank" rel="noopener">공식 홈페이지(IR 실적보고서)</a></div>
+            </td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨(문구)</span>"21년 연속 국내 주식시장 점유율 1위" — 앱 설명에 문구는 있으나 구체적 점유율(%) 수치는 비공개</div>
+              <div class="src">출처: <a href="https://apps.apple.com/kr/app/%ED%82%A4%EC%9B%80%EC%A6%9D%EA%B6%8C-%EC%98%81%EC%9B%85%EB%AC%B8s-new/id1570370057" target="_blank" rel="noopener">App Store(앱 설명)</a></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="category">고객 자산/계좌 지표</td>
+            <td>
+              <div class="cell-value"><span class="status ok">확인됨</span>고액자산가(HNW, 10억원 이상) 5.8만명 (전년동기대비 +50.5%, 2026년 2분기)</div>
+              <div class="src">출처: <a href="https://securities.miraeasset.com/newir/view/pc/kr/investor/financialsReports.jsp" target="_blank" rel="noopener">공식 홈페이지(IR 실적보고서)</a></div>
+            </td>
+            <td>
+              <div class="cell-value"><span class="status warn">미확인</span>공식 발표 자료에서 계좌 수·고객 자산 총액에 대한 구체적 수치를 확인하지 못함 (제3자 추정치는 신뢰 가능한 1차 출처가 아니므로 제외)</div>
+              <div class="src">출처: 없음</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>조사 방법 및 제약사항</h2>
+      <ul class="method-list">
+        <li>회사별로 별도의 조사 서브에이전트가 병렬로 공개 출처(보도자료·앱스토어·공식 홈페이지)만을 사용해 1차 조사했습니다.</li>
+        <li>이후 각 회사마다 독립적인 검증 서브에이전트가 동일 항목을 처음부터 다시 원출처에서 재확인했으며, 값이 다르거나 출처에서 확인되지 않으면 '미확인'으로 조정했습니다.</li>
+        <li>모든 수치·정책 항목에는 실제 확인한 출처 링크를 표에 함께 남겼습니다.</li>
+      </ul>
+      <div class="caveat">
+        <strong>예외 사항:</strong> 키움증권의 2026년 2분기 실적 수치는 공식 IR 홈페이지가 자바스크립트로 렌더링되어 직접 확인이 불가능했습니다.
+        검증 과정에서 복수의 언론사가 동일한 공식 잠정실적 공시 내용을 상호 일치하게 보도한 점을 근거로 '확인됨'으로 처리했지만,
+        이는 "보도자료·앱스토어·공식 홈페이지"로 한정한 원 출처 원칙에서 다소 벗어난 예외적 처리입니다. 엄격하게 원칙을 적용한다면 이 항목도 '미확인'으로 보수적으로 간주할 수 있습니다.
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>
