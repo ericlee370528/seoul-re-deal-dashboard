@@ -25,6 +25,7 @@
           <label class="gtitle">기간</label>
           <select id="periodSelect">
             <option value="2026" selected>2026년 전체</option>
+            <option value="2025">2025년 전체</option>
             <option value="all">전체 기간</option>
           </select>
         </div>
@@ -34,6 +35,10 @@
         </div>
         <div class="filter-group">
           <label class="gtitle">자산유형</label>
+          <div class="chips-toolbar">
+            <button class="btn-chip-toggle" id="assetTypeSelectAllBtn" type="button">전체 선택</button>
+            <button class="btn-chip-toggle" id="assetTypeSelectNoneBtn" type="button">전체 해제</button>
+          </div>
           <div class="chips" id="assetTypeChips"></div>
         </div>
         <div class="filter-group">
@@ -453,6 +458,12 @@ C730.596,766.053,735.563,764.919,737.012,767.305z"/>
     </section>
 
     <section class="card">
+      <h2>증권사별 주관 딜 현황</h2>
+      <div class="broker-ranking" id="brokerRanking"></div>
+      <div class="broker-note">계산 근거: 각 딜의 주선사/주관사(lead_arrangers) 표기에 증권사명이 포함된 딜 건수 (매수·매도 등 세부 역할 구분 없이 집계) · 한국투자증권·NH투자증권·KB증권·미래에셋증권·메리츠증권·키움증권은 딜이 없어도 항시 표시 · 현재 필터 조건 기준</div>
+    </section>
+
+    <section class="card">
       <div class="list-head-row">
         <h2 style="margin:0;">딜 리스트</h2>
         <span id="listCount" style="font-size:12.5px;color:var(--text-muted);"></span>
@@ -480,9 +491,13 @@ C730.596,766.053,735.563,764.919,737.012,767.305z"/>
   </div>
 
   <div id="overlay"></div>
-  <aside id="detailPanel">
+  <aside id="detailPanel" class="detail-panel">
     <button class="close-btn" id="closeDetailBtn" aria-label="닫기">&times;</button>
     <div id="detailContent"></div>
+  </aside>
+  <aside id="brokerPanel" class="detail-panel">
+    <button class="close-btn" id="closeBrokerBtn" aria-label="닫기">&times;</button>
+    <div id="brokerPanelContent"></div>
   </aside>
 </div>
 

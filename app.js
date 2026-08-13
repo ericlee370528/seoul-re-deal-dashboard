@@ -55,6 +55,70 @@
 
   var DEALS = [];
 
+  var REQUIRED_BROKERS = ["한국투자증권", "NH투자증권", "KB증권", "미래에셋증권", "메리츠증권", "키움증권"];
+
+  function extractEntityNames(rawText) {
+    return rawText
+      .replace(/\([^)]*\)/g, "")
+      .split(/[·\/,]/)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+  }
+
+  function isBrokerName(name) {
+    return REQUIRED_BROKERS.indexOf(name) !== -1 || /증권$/.test(name);
+  }
+
+  function brokerCandidatesFromDeals(deals) {
+    var found = {};
+    REQUIRED_BROKERS.forEach(function (b) { found[b] = true; });
+    deals.forEach(function (d) {
+      (d.leadArrangers || []).forEach(function (raw) {
+        extractEntityNames(raw).forEach(function (name) {
+          if (isBrokerName(name)) found[name] = true;
+        });
+      });
+    });
+    return Object.keys(found);
+  }
+
+  function brokerDealCounts(deals, candidates) {
+    var counts = {};
+    candidates.forEach(function (b) { counts[b] = 0; });
+    deals.forEach(function (d) {
+      var seenInDeal = {};
+      (d.leadArrangers || []).forEach(function (raw) {
+        extractEntityNames(raw).forEach(function (name) {
+          if (counts.hasOwnProperty(name) && !seenInDeal[name]) {
+            seenInDeal[name] = true;
+            counts[name] += 1;
+          }
+        });
+      });
+    });
+    return counts;
+  }
+
+  function renderBrokerRanking(deals) {
+    var container = document.getElementById("brokerRanking");
+    container.innerHTML = "";
+    var counts = brokerDealCounts(deals, state.brokerCandidates);
+    var rows = state.brokerCandidates.map(function (name) { return { name: name, count: counts[name] }; });
+    rows.sort(function (a, b) { return b.count - a.count; });
+    var maxCount = rows.reduce(function (m, r) { return Math.max(m, r.count); }, 0);
+    rows.forEach(function (r) {
+      var row = document.createElement("div");
+      row.className = "broker-row";
+      var widthPct = maxCount ? Math.round((r.count / maxCount) * 100) : 0;
+      row.innerHTML =
+        '<span class="broker-name">' + r.name + '</span>' +
+        '<div class="broker-bar-track"><div class="broker-bar" style="width:' + widthPct + '%"></div></div>' +
+        '<span class="broker-count">' + r.count + '건</span>';
+      row.addEventListener("click", function () { openBrokerDetail(r.name, deals); });
+      container.appendChild(row);
+    });
+  }
+
   var state = {
     period: "2026",
     dealTypes: new Set(["PF", "실물인수"]),
@@ -62,7 +126,8 @@
     selectedGu: null, // null = 서울 전체(자치구 미선택)
     minAmount: 0,
     maxAmount: 50000,
-    sortKey: "updatedAt"
+    sortKey: "updatedAt",
+    brokerCandidates: []
   };
 
   function uniqueValues(field) {
@@ -75,10 +140,9 @@
 
   function withinPeriod(deal) {
     if (state.period === "all") return true;
-    // "2026": 2026년 1월 1일 이후 발생/업데이트된 딜 전체
+    // "2026"/"2025" 등: 해당 연도에 발생/업데이트된 딜만
     var updated = new Date(deal.updatedAt + "T00:00:00");
-    var yearStart = new Date(state.period + "-01-01T00:00:00");
-    return updated >= yearStart;
+    return updated.getFullYear() === Number(state.period);
   }
 
   function applyFilters() {
@@ -245,11 +309,62 @@
   function closeDetail() {
     document.getElementById("overlay").classList.remove("open");
     document.getElementById("detailPanel").classList.remove("open");
+    document.getElementById("brokerPanel").classList.remove("open");
   }
 
   document.getElementById("overlay").addEventListener("click", closeDetail);
   document.getElementById("closeDetailBtn").addEventListener("click", closeDetail);
+  document.getElementById("closeBrokerBtn").addEventListener("click", closeDetail);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDetail(); });
+
+  function dealsForBroker(brokerName, deals) {
+    return deals.filter(function (d) {
+      return (d.leadArrangers || []).some(function (raw) {
+        return extractEntityNames(raw).indexOf(brokerName) !== -1;
+      });
+    });
+  }
+
+  function openBrokerDetail(brokerName, deals) {
+    var matches = dealsForBroker(brokerName, deals);
+    matches.sort(function (a, b) { return new Date(b.updatedAt) - new Date(a.updatedAt); });
+    var rowsHtml = matches.map(function (d) {
+      var amountText = (d.amountEok === null || d.amountEok === undefined) ? "미확인" : fmt0(d.amountEok) + "억원";
+      return '<div class="broker-deal-row" data-deal-id="' + d.id + '">' +
+        '<div class="bd-name">' + badgeHtml(d.dealType) + ' ' + d.dealName + '</div>' +
+        '<div class="bd-meta"><span>' + d.assetType + '</span><span>' + d.region + '</span><span>' + amountText + '</span><span>' + d.stage + '</span><span>' + d.updatedAt + '</span></div>' +
+      '</div>';
+    }).join("");
+
+    var content = document.getElementById("brokerPanelContent");
+    content.innerHTML =
+      '<h3>' + brokerName + '</h3>' +
+      '<div class="amount-block">' + matches.length + '건</div>' +
+      '<div class="amount-calc">현재 필터 조건 기준, 이 증권사가 주선사/주관사로 표기된 딜 목록 (매수·매도 등 세부 역할 구분 없이 집계)</div>' +
+      (rowsHtml || '<div class="fval">해당 조건에서 참여한 딜이 없습니다.</div>');
+
+    Array.prototype.forEach.call(content.querySelectorAll(".broker-deal-row"), function (row) {
+      row.addEventListener("click", function () {
+        document.getElementById("brokerPanel").classList.remove("open");
+        openDetail(row.getAttribute("data-deal-id"));
+      });
+    });
+
+    document.getElementById("overlay").classList.add("open");
+    document.getElementById("detailPanel").classList.remove("open");
+    document.getElementById("brokerPanel").classList.add("open");
+  }
+
+  document.getElementById("assetTypeSelectAllBtn").addEventListener("click", function () {
+    state.assetTypes = new Set(uniqueValues("assetType"));
+    renderChips("assetTypeChips", uniqueValues("assetType"), state.assetTypes);
+    refresh();
+  });
+  document.getElementById("assetTypeSelectNoneBtn").addEventListener("click", function () {
+    state.assetTypes = new Set();
+    renderChips("assetTypeChips", uniqueValues("assetType"), state.assetTypes);
+    refresh();
+  });
 
   document.getElementById("periodSelect").addEventListener("change", function (e) {
     state.period = e.target.value;
@@ -399,11 +514,13 @@
     var filtered = applyFilters();
     renderList(filtered);
     renderKPI(filtered);
+    renderBrokerRanking(filtered);
   }
 
   async function init() {
     DEALS = await fetchDeals();
     state.assetTypes = new Set(uniqueValues("assetType"));
+    state.brokerCandidates = brokerCandidatesFromDeals(DEALS);
     renderChips("dealTypeChips", ["PF", "실물인수"], state.dealTypes);
     renderChips("assetTypeChips", uniqueValues("assetType"), state.assetTypes);
     initMap();
